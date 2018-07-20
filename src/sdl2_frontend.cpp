@@ -53,7 +53,6 @@ event sdl2_frontend::get_event(void){
 	SDL_Event e;
 
 	if (SDL_PollEvent(&e) != 0) {
-		puts("Got event!");
 		if (e.type == SDL_QUIT){
 			return event::Quit;
 		}

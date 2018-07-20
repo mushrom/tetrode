@@ -119,13 +119,19 @@ void field_state::active_normalize(void){
 		if (x >= size.x && x > over_x) {
 			over_x = x;
 		}
+
+		printf("coord: %d, %d, %d, %d\n", x, y, size.x, size.y);
+		printf("coord: over_x: %d\n", over_x);
+
 	}
 
 	active.second.x -= min_x;
 	active.second.y -= min_y;
 
-	active.second.x -= over_x? over_x - size.x - 1: 0;
-	active.second.y -= over_y? over_y - size.y - 1: 0;
+	active.second.x -= over_x? over_x - size.x + 1: 0;
+	active.second.y -= over_y? over_y - size.y + 1: 0;
+
+	printf("active: %d, %d\n", active.second.x, active.second.y);
 }
 
 void field_state::handle_event(enum event ev){
@@ -201,6 +207,7 @@ void field_state::handle_event(enum event ev){
 			while (active_collides_lower()) {
 				active.second.y += 1;
 			}
+
 			break;
 	}
 }
