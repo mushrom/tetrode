@@ -45,10 +45,10 @@ bool field_state::active_collides_lower(void){
 	for (auto& block : active.first.blocks) {
 		auto& coord = active.second;
 
-		unsigned y = block.second.y + coord.y;
-		unsigned x = block.second.x + coord.x;
+		int y = block.second.y + coord.y;
+		int x = block.second.x + coord.x;
 
-		if (y == 0){
+		if (y <= 0){
 			return true;
 		}
 
@@ -82,7 +82,6 @@ bool field_state::active_collides_sides(enum movement dir){
 				return true;
 			}
 
-
 			if (field[y][x + 1].state != block::states::Empty){
 				return true;
 			}
@@ -90,6 +89,43 @@ bool field_state::active_collides_sides(enum movement dir){
 	}
 
 	return false;
+}
+
+void field_state::active_normalize(void){
+	int min_x = 0;
+	int min_y = 0;
+
+	int over_x = 0;
+	int over_y = 0;
+
+	for (auto& block : active.first.blocks) {
+		auto& coord = active.second;
+
+		int y = block.second.y + coord.y;
+		int x = block.second.x + coord.x;
+
+		if (y < min_y){
+			min_y = y;
+		}
+
+		if (x < min_x){
+			min_x = x;
+		}
+
+		if (y >= size.y && y > over_y) {
+			over_y = y;
+		}
+
+		if (x >= size.x && x > over_x) {
+			over_x = x;
+		}
+	}
+
+	active.second.x -= min_x;
+	active.second.y -= min_y;
+
+	active.second.x -= over_x? over_x - size.x - 1: 0;
+	active.second.y -= over_y? over_y - size.y - 1: 0;
 }
 
 void field_state::handle_event(enum event ev){
@@ -150,6 +186,7 @@ void field_state::handle_event(enum event ev){
 
 		case event::RotateLeft:
 			active.first.rotate(movement::Left);
+			active_normalize();
 
 			while (active_collides_lower()) {
 				active.second.y += 1;
@@ -159,6 +196,8 @@ void field_state::handle_event(enum event ev){
 
 		case event::RotateRight:
 			active.first.rotate(movement::Right);
+			active_normalize();
+
 			while (active_collides_lower()) {
 				active.second.y += 1;
 			}

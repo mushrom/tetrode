@@ -82,7 +82,7 @@ void sdl2_frontend::redraw(void){
 	SDL_RenderFillRect(renderer, NULL);
 
 	SDL_Rect rect;
-	rect.w = rect.h = 22;
+	rect.w = rect.h = 21;
 
 	for (int y = field.size.y / 2; y >= 0; y--) {
 		for (int x = 0; x < field.size.x; x++) {

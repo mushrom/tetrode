@@ -103,6 +103,7 @@ class field_state {
 		void clear_lines(void);
 		bool active_collides_lower(void);
 		bool active_collides_sides(enum movement dir);
+		void active_normalize(void);
 };
 
 // namespace tetrode
