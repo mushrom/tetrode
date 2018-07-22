@@ -9,9 +9,14 @@
 
 namespace tetrode {
 
+#define BLOCK_FILL_SIZE 21
+#define BLOCK_FULL_SIZE 24
+
 std::map<block::states, std::tuple<unsigned, unsigned, unsigned>> block_colors = {
 	{ block::states::Empty,    {0x11, 0x11, 0x11} },
 	{ block::states::Reserved, {0x22, 0x11, 0x11} },
+	{ block::states::Ghost,    {0x88, 0xaa, 0xdd} },
+
 	{ block::states::Garbage,  {0x22, 0x22, 0x22} },
 	{ block::states::Cyan,     {0x44, 0x88, 0xaa} },
 	{ block::states::Yellow,   {0xaa, 0xaa, 0x44} },
@@ -75,20 +80,43 @@ event sdl2_frontend::get_event(void){
 	return event::NullEvent;
 }
 
+void sdl2_frontend::draw_tetrimino(tetrimino& tet, coord_2d coord){
+	SDL_Rect rect;
+	rect.w = rect.h = BLOCK_FILL_SIZE;
+
+	for (const auto &block : tet.blocks) {
+		auto color = block_colors[block.first.state];
+
+		//int x = (block.second.x + field.active.second.x);
+		//int y = (block.second.y + field.active.second.y);
+		int x = (block.second.x + coord.x);
+		int y = (block.second.y + coord.y);
+
+		rect.x = 48 + x       * BLOCK_FULL_SIZE;
+		rect.y = 48 + ((field.size.y / 2) - y) * BLOCK_FULL_SIZE;
+
+		SDL_SetRenderDrawColor(renderer,
+				std::get<0>(color),
+				std::get<1>(color),
+				std::get<2>(color), 0);
+		SDL_RenderFillRect(renderer, &rect);
+	}
+}
+
 void sdl2_frontend::redraw(void){
 	SDL_RenderClear(renderer);
-	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+	SDL_SetRenderDrawColor(renderer, 0x8, 0x8, 0x8, 0);
 	SDL_RenderFillRect(renderer, NULL);
 
 	SDL_Rect rect;
-	rect.w = rect.h = 21;
+	rect.w = rect.h = BLOCK_FILL_SIZE;
 
 	for (int y = field.size.y / 2; y >= 0; y--) {
 		for (int x = 0; x < field.size.x; x++) {
 			auto color = block_colors[field.field[y][x].state];
 
-			rect.x = 1 + x       * 24;
-			rect.y = 1 + ((field.size.y / 2) - y) * 24;
+			rect.x = 48 + x       * BLOCK_FULL_SIZE;
+			rect.y = 48 + ((field.size.y / 2) - y) * BLOCK_FULL_SIZE;
 
 			SDL_SetRenderDrawColor(renderer,
 			                       std::get<0>(color),
@@ -98,54 +126,21 @@ void sdl2_frontend::redraw(void){
 		}
 	}
 
-	for (const auto &block : field.active.first.blocks) {
-		auto color = block_colors[block.first.state];
+	coord_2d ghost_coord = field.lower_collide_coord(field.active.first, field.active.second);
+	tetrimino ghost_block = field.active.first;
 
-		int x = (block.second.x + field.active.second.x);
-		int y = (block.second.y + field.active.second.y);
-
-		rect.x = 1 + x       * 24;
-		rect.y = 1 + ((field.size.y / 2) - y) * 24;
-
-		SDL_SetRenderDrawColor(renderer,
-				std::get<0>(color),
-				std::get<1>(color),
-				std::get<2>(color), 0);
-		SDL_RenderFillRect(renderer, &rect);
+	for (auto& block : ghost_block.blocks){
+		block.first.state = block::states::Ghost;
 	}
 
-	for (const auto &block : field.next_pieces.front().blocks) {
-		auto color = block_colors[block.first.state];
-
-		int x = block.second.x;
-		int y = block.second.y;
-
-		rect.x = (field.size.x * 24) + 48 + x * 24;
-		rect.y = (2 - y) * 24;
-
-		SDL_SetRenderDrawColor(renderer,
-				std::get<0>(color),
-				std::get<1>(color),
-				std::get<2>(color), 0);
-		SDL_RenderFillRect(renderer, &rect);
-	}
+	draw_tetrimino( ghost_block, ghost_coord );
+	draw_tetrimino( field.active.first, field.active.second );
+	draw_tetrimino( field.next_pieces.front(),
+	                coord_2d(field.size.x + 2, 2 ));
 
 	if (field.have_held) {
-		for (const auto &block : field.hold.blocks) {
-			auto color = block_colors[block.first.state];
-
-			int x = block.second.x;
-			int y = block.second.y;
-
-			rect.x = (field.size.x * 24) + 48 + x * 24;
-			rect.y = (8 - y) * 24;
-
-			SDL_SetRenderDrawColor(renderer,
-					std::get<0>(color),
-					std::get<1>(color),
-					std::get<2>(color), 0);
-			SDL_RenderFillRect(renderer, &rect);
-		}
+		draw_tetrimino( field.hold,
+		                coord_2d(field.size.x + 2, 8 ));
 	}
 
 	SDL_RenderPresent(renderer);

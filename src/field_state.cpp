@@ -41,10 +41,8 @@ void field_state::place_active(void){
 	already_held = false;
 }
 
-bool field_state::active_collides_lower(void){
-	for (auto& block : active.first.blocks) {
-		auto& coord = active.second;
-
+bool field_state::collides_lower(tetrimino& tet, coord_2d& coord){
+	for (auto& block : tet.blocks) {
 		int y = block.second.y + coord.y;
 		int x = block.second.x + coord.x;
 
@@ -58,6 +56,20 @@ bool field_state::active_collides_lower(void){
 	}
 
 	return false;
+}
+
+bool field_state::active_collides_lower(void){
+	return collides_lower(active.first, active.second);
+}
+
+coord_2d field_state::lower_collide_coord(tetrimino& tet, coord_2d& coord){
+	coord_2d ret = coord;
+
+	while (!collides_lower(tet, ret)){
+		ret.y -= 1;
+	}
+
+	return ret;
 }
 
 bool field_state::active_collides_sides(enum movement dir){

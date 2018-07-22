@@ -30,6 +30,7 @@ class block {
 		enum states {
 			Empty,
 			Reserved,
+			Ghost,
 
 			Garbage,
 			Cyan,
@@ -54,6 +55,10 @@ class coord_2d {
 			x = nx;
 			y = ny;
 		};
+
+		bool operator == (const coord_2d& other){
+			return (x = other.x) && (y == other.y);
+		}
 
 		int x, y;
 };
@@ -82,6 +87,7 @@ class field_state {
 	public:
 		field_state(unsigned board_x=10, unsigned board_y=40, uint32_t seed=0);
 		void handle_event(enum event ev);
+		coord_2d lower_collide_coord(tetrimino& tet, coord_2d& coord);
 
 		coord_2d size;
 		std::pair<tetrimino, coord_2d> active;
@@ -101,6 +107,8 @@ class field_state {
 		void place_active(void);
 		void get_new_active_tetrimino(void);
 		void clear_lines(void);
+
+		bool collides_lower(tetrimino& tet, coord_2d& coord);
 		bool active_collides_lower(void);
 		bool active_collides_sides(enum movement dir);
 		void active_normalize(void);

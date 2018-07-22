@@ -14,6 +14,7 @@ class sdl2_frontend : public frontend {
 	private:
 		void redraw(void);
 		event get_event(void);
+		void draw_tetrimino(tetrimino& tet, coord_2d coord);
 
 		SDL_Window   *window;
 		SDL_Renderer *renderer;
