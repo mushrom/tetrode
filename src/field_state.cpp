@@ -141,11 +141,15 @@ void field_state::active_normalize(void){
 }
 
 void field_state::rotation_normalize(void){
-	active_normalize();
+	bool collided = false;
 
+	active_normalize();
 	while (active_collides_lower()) {
 		active.second.y += 1;
+		collided = true;
 	}
+
+	active.second.y -= collided;
 }
 
 void field_state::handle_event(enum event ev){
