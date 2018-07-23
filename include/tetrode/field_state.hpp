@@ -112,6 +112,7 @@ class field_state {
 		bool active_collides_lower(void);
 		bool active_collides_sides(enum movement dir);
 		void active_normalize(void);
+		void rotation_normalize(void);
 };
 
 // namespace tetrode

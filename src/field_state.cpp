@@ -131,10 +131,6 @@ void field_state::active_normalize(void){
 		if (x >= size.x && x > over_x) {
 			over_x = x;
 		}
-
-		printf("coord: %d, %d, %d, %d\n", x, y, size.x, size.y);
-		printf("coord: over_x: %d\n", over_x);
-
 	}
 
 	active.second.x -= min_x;
@@ -142,8 +138,14 @@ void field_state::active_normalize(void){
 
 	active.second.x -= over_x? over_x - size.x + 1: 0;
 	active.second.y -= over_y? over_y - size.y + 1: 0;
+}
 
-	printf("active: %d, %d\n", active.second.x, active.second.y);
+void field_state::rotation_normalize(void){
+	active_normalize();
+
+	while (active_collides_lower()) {
+		active.second.y += 1;
+	}
 }
 
 void field_state::handle_event(enum event ev){
@@ -171,20 +173,15 @@ void field_state::handle_event(enum event ev){
 		case event::Hold:
 			if (!already_held) {
 				if (have_held) {
-					auto temp = active.first;
-					active.first = hold;
-					hold = temp;
-					active.second = coord_2d(size.x / 2 - 1, size.y / 2 + 1);
+					next_pieces.push_front(hold);
 				}
 
-				else {
-					hold = active.first;
-					have_held = true;
-					get_new_active_tetrimino();
-				}
-
+				hold = active.first;
 				hold.regen_blocks();
+				have_held = true;
 				already_held = true;
+
+				get_new_active_tetrimino();
 			}
 
 			break;
@@ -204,22 +201,12 @@ void field_state::handle_event(enum event ev){
 
 		case event::RotateLeft:
 			active.first.rotate(movement::Left);
-			active_normalize();
-
-			while (active_collides_lower()) {
-				active.second.y += 1;
-			}
-
+			rotation_normalize();
 			break;
 
 		case event::RotateRight:
 			active.first.rotate(movement::Right);
-			active_normalize();
-
-			while (active_collides_lower()) {
-				active.second.y += 1;
-			}
-
+			rotation_normalize();
 			break;
 	}
 }
