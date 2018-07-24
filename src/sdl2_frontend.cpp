@@ -16,6 +16,7 @@ std::map<block::states, std::tuple<unsigned, unsigned, unsigned>> block_colors =
 	{ block::states::Empty,    {0x11, 0x11, 0x11} },
 	{ block::states::Reserved, {0x22, 0x11, 0x11} },
 	{ block::states::Ghost,    {0x88, 0xaa, 0xdd} },
+	{ block::states::Cleared,  {0xf0, 0xdd, 0xf0} },
 
 	{ block::states::Garbage,  {0x22, 0x22, 0x22} },
 	{ block::states::Cyan,     {0x44, 0x88, 0xaa} },
@@ -146,17 +147,16 @@ void sdl2_frontend::redraw(void){
 	SDL_RenderPresent(renderer);
 }
 
+#include <unistd.h>
+
 int sdl2_frontend::run(void){
 	event ev;
 	unsigned ticks = 0;
 
 	while ((ev = get_event()) != event::Quit) {
-		if (ticks >= 15) {
-			field.handle_event(event::MoveDown);
-			ticks = 0;
-		}
-
+		field.handle_event(event::Tick);
 		field.handle_event(ev);
+
 		redraw();
 		SDL_Delay(10);
 		ticks++;

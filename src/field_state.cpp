@@ -9,6 +9,8 @@ field_state::field_state(unsigned board_x, unsigned board_y, uint32_t seed){
 	// initialize game state
 	random_seed = seed;
 	size = coord_2d(board_x, board_y);
+	drop_ticks = movement_ticks = clear_ticks = 0;
+
 	get_new_active_tetrimino();
 
 	// initialize playing field vector
@@ -36,8 +38,14 @@ void field_state::place_active(void){
 		field[coord.y + block.second.y][coord.x + block.second.x] = block.first;
 	}
 
-	clear_lines();
+	if (color_cleared_lines()) {
+		clear_ticks = 30;
+	}
+
 	get_new_active_tetrimino();
+
+	// clear drop counter in case there was a collision, reset hold status
+	drop_ticks = 0;
 	already_held = false;
 }
 
@@ -153,16 +161,47 @@ void field_state::rotation_normalize(void){
 }
 
 void field_state::handle_event(enum event ev){
+	// clear_ticks set by place_active, to add a delay when a row is cleared
+	if (clear_ticks > 0) {
+		clear_ticks--;
+
+		if (clear_ticks == 0) {
+			clear_lines();
+		}
+
+		return;
+	}
+
 	switch (ev) {
+		case event::Tick:
+			if (movement_ticks >= 15){
+				movement_ticks = 0;
+				handle_event(event::MoveDown);
+			}
+
+			if (drop_ticks && active_collides_lower()) {
+				drop_ticks++;
+
+				if (drop_ticks > 50) {
+					place_active();
+					drop_ticks = 0;
+				}
+
+			} else {
+				drop_ticks = 0;
+			}
+
+			movement_ticks++;
+			break;
+
 		case event::MoveDown:
 			// TODO: timeout for moving pieces around after collision
 			if (!active_collides_lower()) {
 				active.second.y -= 1;
 
+			} else if (drop_ticks == 0) {
+				drop_ticks = 1;
 			}
-			/*else {
-				place_active();
-			}*/
 
 			break;
 
@@ -234,8 +273,9 @@ void field_state::generate_next_pieces(void){
 	}
 }
 
-void field_state::clear_lines(void){
-	//for (unsigned y = 0; y < size.y; y++) {
+bool field_state::clear_lines(void){
+	bool any_cleared = false;
+
 	for (unsigned y = 0; y < size.y;) {
 		bool full = true;
 
@@ -249,6 +289,8 @@ void field_state::clear_lines(void){
 		}
 
 		if (full) {
+			any_cleared = true;
+
 			for (unsigned j = y; j < size.y - 1; j++) {
 				field[j] = field[j + 1];
 			}
@@ -260,6 +302,42 @@ void field_state::clear_lines(void){
 			y += 1;
 		}
 	}
+
+	return any_cleared;
+}
+
+bool field_state::color_cleared_lines(void){
+	bool any_cleared = false;
+
+	for (unsigned y = 0; y < size.y; y++) {
+		bool full = true;
+
+		for (auto& block : field[y]) {
+			if (block.state == block::states::Empty
+			    || block.state == block::states::Reserved)
+			{
+				full = false;
+				break;
+			}
+		}
+
+		if (full) {
+			any_cleared = true;
+
+			for (auto& block : field[y]) {
+				block.state = block::states::Cleared;
+			}
+			/*
+			for (unsigned j = y; j < size.y - 1; j++) {
+				field[j] = field[j + 1];
+			}
+
+			field[size.y - 1].resize(size.x);
+			*/
+		}
+	}
+
+	return any_cleared;
 }
 
 void tetrimino::rotate(enum movement dir){

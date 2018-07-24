@@ -9,6 +9,7 @@ namespace tetrode {
 enum event {
 	NullEvent,
 
+	Tick,
 	RotateLeft,
 	RotateRight,
 	MoveLeft,
@@ -31,6 +32,7 @@ class block {
 			Empty,
 			Reserved,
 			Ghost,
+			Cleared,
 
 			Garbage,
 			Cyan,
@@ -101,12 +103,16 @@ class field_state {
 
 		// TODO: implement prng
 		uint32_t random_seed;
+		unsigned movement_ticks;
+		unsigned clear_ticks;
+		unsigned drop_ticks;
 
 	private:
 		void generate_next_pieces(void);
 		void place_active(void);
 		void get_new_active_tetrimino(void);
-		void clear_lines(void);
+		bool clear_lines(void);
+		bool color_cleared_lines(void);
 
 		bool collides_lower(tetrimino& tet, coord_2d& coord);
 		bool active_collides_lower(void);
