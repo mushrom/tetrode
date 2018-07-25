@@ -181,10 +181,12 @@ void sdl2_frontend::redraw(void){
 	}
 
 	std::string score_str = "score: " + std::to_string(field.score);
-	std::string level_str = "level: " + std::to_string(field.score);
+	std::string level_str = "level: " + std::to_string(field.level);
+	std::string lines_str = "cleared: " + std::to_string(field.lines_cleared);
 
 	draw_text(level_str, coord_2d(field.size.x + 2, 2));
 	draw_text(score_str, coord_2d(field.size.x + 2, 3));
+	draw_text(lines_str, coord_2d(field.size.x + 2, 4));
 
 	SDL_RenderPresent(renderer);
 }

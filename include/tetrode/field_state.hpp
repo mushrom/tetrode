@@ -107,15 +107,17 @@ class field_state {
 		unsigned movement_ticks;
 		unsigned clear_ticks;
 		unsigned drop_ticks;
+
 		unsigned level;
 		unsigned score;
+		unsigned lines_cleared;
 
 	private:
 		void generate_next_pieces(void);
 		void place_active(void);
 		void get_new_active_tetrimino(void);
-		bool clear_lines(void);
-		bool color_cleared_lines(void);
+		int  clear_lines(void);
+		int  color_cleared_lines(void);
 
 		bool collides_lower(tetrimino& tet, coord_2d& coord);
 		bool active_collides_lower(void);

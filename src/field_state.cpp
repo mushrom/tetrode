@@ -9,7 +9,7 @@ field_state::field_state(unsigned board_x, unsigned board_y, uint32_t seed){
 	// initialize game state
 	random_seed = seed;
 	size = coord_2d(board_x, board_y);
-	score = drop_ticks = movement_ticks = clear_ticks = 0;
+	lines_cleared = score = drop_ticks = movement_ticks = clear_ticks = 0;
 	level = 1;
 
 	get_new_active_tetrimino();
@@ -34,13 +34,27 @@ void field_state::get_new_active_tetrimino(void){
 }
 
 void field_state::place_active(void){
+	int cleared = 0;
+
 	for (auto& block : active.first.blocks) {
 		auto& coord = active.second;
 		field[coord.y + block.second.y][coord.x + block.second.x] = block.first;
 	}
 
-	if (color_cleared_lines()) {
+	if ((cleared = color_cleared_lines())) {
 		clear_ticks = 30;
+		lines_cleared += cleared;
+
+		// TODO: variable goal levels
+		level = 1 + (lines_cleared / 10);
+
+		switch (cleared) {
+			case 1: score += 100 * level; break;
+			case 2: score += 300 * level; break;
+			case 3: score += 500 * level; break;
+			case 4: score += 800 * level; break;
+			default: /* wut */ break;
+		}
 	}
 
 	get_new_active_tetrimino();
@@ -274,8 +288,8 @@ void field_state::generate_next_pieces(void){
 	}
 }
 
-bool field_state::clear_lines(void){
-	bool any_cleared = false;
+int field_state::clear_lines(void){
+	int cleared = 0;
 
 	for (unsigned y = 0; y < size.y;) {
 		bool full = true;
@@ -290,7 +304,7 @@ bool field_state::clear_lines(void){
 		}
 
 		if (full) {
-			any_cleared = true;
+			cleared++;
 
 			for (unsigned j = y; j < size.y - 1; j++) {
 				field[j] = field[j + 1];
@@ -304,11 +318,11 @@ bool field_state::clear_lines(void){
 		}
 	}
 
-	return any_cleared;
+	return cleared;
 }
 
-bool field_state::color_cleared_lines(void){
-	bool any_cleared = false;
+int field_state::color_cleared_lines(void){
+	int cleared = 0;
 
 	for (unsigned y = 0; y < size.y; y++) {
 		bool full = true;
@@ -323,22 +337,15 @@ bool field_state::color_cleared_lines(void){
 		}
 
 		if (full) {
-			any_cleared = true;
+			cleared++;
 
 			for (auto& block : field[y]) {
 				block.state = block::states::Cleared;
 			}
-			/*
-			for (unsigned j = y; j < size.y - 1; j++) {
-				field[j] = field[j + 1];
-			}
-
-			field[size.y - 1].resize(size.x);
-			*/
 		}
 	}
 
-	return any_cleared;
+	return cleared;
 }
 
 void tetrimino::rotate(enum movement dir){
