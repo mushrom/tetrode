@@ -201,7 +201,11 @@ int sdl2_frontend::run(void){
 		field.handle_event(event::Tick);
 		field.handle_event(ev);
 
-		redraw();
+		if (field.updated) {
+			redraw();
+			field.updated = false;
+		}
+
 		SDL_Delay(10);
 		ticks++;
 	}

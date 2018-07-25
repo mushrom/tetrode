@@ -112,6 +112,9 @@ class field_state {
 		unsigned score;
 		unsigned lines_cleared;
 
+		// flag to help renderer know when to redraw
+		bool updated;
+
 	private:
 		void generate_next_pieces(void);
 		void place_active(void);

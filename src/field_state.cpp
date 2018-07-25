@@ -11,6 +11,7 @@ field_state::field_state(unsigned board_x, unsigned board_y, uint32_t seed){
 	size = coord_2d(board_x, board_y);
 	lines_cleared = score = drop_ticks = movement_ticks = clear_ticks = 0;
 	level = 1;
+	updated = true;
 
 	get_new_active_tetrimino();
 
@@ -62,6 +63,7 @@ void field_state::place_active(void){
 	// clear drop counter in case there was a collision, reset hold status
 	drop_ticks = 0;
 	already_held = false;
+	updated = true;
 }
 
 bool field_state::collides_lower(tetrimino& tet, coord_2d& coord){
@@ -182,6 +184,7 @@ void field_state::handle_event(enum event ev){
 
 		if (clear_ticks == 0) {
 			clear_lines();
+			updated = true;
 		}
 
 		return;
@@ -213,6 +216,7 @@ void field_state::handle_event(enum event ev){
 			// TODO: timeout for moving pieces around after collision
 			if (!active_collides_lower()) {
 				active.second.y -= 1;
+				updated = true;
 
 			} else if (drop_ticks == 0) {
 				drop_ticks = 1;
@@ -238,6 +242,7 @@ void field_state::handle_event(enum event ev){
 				hold.regen_blocks();
 				have_held = true;
 				already_held = true;
+				updated = true;
 
 				get_new_active_tetrimino();
 			}
@@ -247,6 +252,7 @@ void field_state::handle_event(enum event ev){
 		case event::MoveLeft:
 			if (!active_collides_sides(movement::Left)) {
 				active.second.x -= 1;
+				updated = true;
 			}
 
 			break;
@@ -254,17 +260,20 @@ void field_state::handle_event(enum event ev){
 		case event::MoveRight:
 			if (!active_collides_sides(movement::Right)) {
 				active.second.x += 1;
+				updated = true;
 			}
 			break;
 
 		case event::RotateLeft:
 			active.first.rotate(movement::Left);
 			rotation_normalize();
+			updated = true;
 			break;
 
 		case event::RotateRight:
 			active.first.rotate(movement::Right);
 			rotation_normalize();
+			updated = true;
 			break;
 	}
 }
