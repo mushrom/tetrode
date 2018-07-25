@@ -78,12 +78,23 @@ event sdl2_frontend::get_event(void){
 		else if (e.type == SDL_KEYDOWN) {
 			switch (e.key.keysym.sym) {
 				case SDLK_q:      return event::Quit;
+				case SDLK_LEFT:
 				case SDLK_h:      return event::MoveLeft;
+				case SDLK_RIGHT:
 				case SDLK_l:      return event::MoveRight;
+				case SDLK_LCTRL:
+				case SDLK_RCTRL:
+				case SDLK_z:
 				case SDLK_j:      return event::RotateLeft;
+				case SDLK_x:
+				case SDLK_UP:
 				case SDLK_k:      return event::RotateRight;
 				case SDLK_SPACE:  return event::Drop;
+				case SDLK_DOWN:   return event::MoveDown;
+				case SDLK_F1:
 				case SDLK_ESCAPE: return event::Pause;
+				case SDLK_c:
+				case SDLK_RSHIFT:
 				case SDLK_LSHIFT: return event::Hold;
 				default:          break;
 			}
