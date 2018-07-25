@@ -103,9 +103,12 @@ class field_state {
 
 		// TODO: implement prng
 		uint32_t random_seed;
+
 		unsigned movement_ticks;
 		unsigned clear_ticks;
 		unsigned drop_ticks;
+		unsigned level;
+		unsigned score;
 
 	private:
 		void generate_next_pieces(void);

@@ -9,7 +9,8 @@ field_state::field_state(unsigned board_x, unsigned board_y, uint32_t seed){
 	// initialize game state
 	random_seed = seed;
 	size = coord_2d(board_x, board_y);
-	drop_ticks = movement_ticks = clear_ticks = 0;
+	score = drop_ticks = movement_ticks = clear_ticks = 0;
+	level = 1;
 
 	get_new_active_tetrimino();
 

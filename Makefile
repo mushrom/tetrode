@@ -1,4 +1,4 @@
-SDL2_FLAGS_y=`sdl2-config --cflags --libs`
+SDL2_FLAGS_y=`sdl2-config --cflags --libs` -lSDL2_ttf
 CXXFLAGS=-std=c++11 -Wall -O2 -march=native -I./include $(SDL2_FLAGS_y)
 
 BASE_SRC=src/field_state.cpp src/frontend.cpp

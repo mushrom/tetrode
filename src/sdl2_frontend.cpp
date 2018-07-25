@@ -1,7 +1,9 @@
 #include <tetrode/sdl2_frontend.hpp>
 #include <tetrode/frontend.hpp>
 #include <tetrode/field_state.hpp>
+
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 
 #include <map>
 #include <tuple>
@@ -33,6 +35,10 @@ sdl2_frontend::sdl2_frontend() {
 		throw "SDL_Init()";
 	}
 
+	if (TTF_Init() == -1) {
+		throw "TTF_Init()";
+	}
+
 	window = SDL_CreateWindow("Tetrode SDL",
 	                          SDL_WINDOWPOS_UNDEFINED,
 	                          SDL_WINDOWPOS_UNDEFINED,
@@ -48,6 +54,12 @@ sdl2_frontend::sdl2_frontend() {
 
 	if (!renderer) {
 		throw "SDL_CreateRenderer()";
+	}
+
+	font = TTF_OpenFont("assets/fonts/LiberationSans-Regular.ttf", BLOCK_FILL_SIZE);
+
+	if (!font) {
+		throw "TTF_OpenFont()";
 	}
 }
 
@@ -104,6 +116,30 @@ void sdl2_frontend::draw_tetrimino(tetrimino& tet, coord_2d coord){
 	}
 }
 
+void sdl2_frontend::draw_text(std::string& str, coord_2d coord) {
+	SDL_Color color = {0xff, 0xff, 0xff};
+	SDL_Surface *text_surface;
+
+	if (!(text_surface = TTF_RenderText_Blended(font, str.c_str(), color))){
+		throw "TTF_RenderText_Blended()";
+
+	} else {
+		SDL_Texture *text = SDL_CreateTextureFromSurface(renderer, text_surface);
+		SDL_Rect rect;
+
+		rect.x = 48 + coord.x * BLOCK_FULL_SIZE;
+		rect.y = 48 + coord.y * BLOCK_FULL_SIZE;
+		rect.w = text_surface->w;
+		rect.h = text_surface->h;;
+
+		SDL_RenderCopy(renderer, text, NULL, &rect);
+
+		// don't forget to free everything lol
+		SDL_DestroyTexture(text);
+		SDL_FreeSurface(text_surface);
+	}
+}
+
 void sdl2_frontend::redraw(void){
 	SDL_RenderClear(renderer);
 	SDL_SetRenderDrawColor(renderer, 0x8, 0x8, 0x8, 0);
@@ -143,6 +179,12 @@ void sdl2_frontend::redraw(void){
 		draw_tetrimino( field.hold,
 		                coord_2d(field.size.x + 2, 8 ));
 	}
+
+	std::string score_str = "score: " + std::to_string(field.score);
+	std::string level_str = "level: " + std::to_string(field.score);
+
+	draw_text(level_str, coord_2d(field.size.x + 2, 2));
+	draw_text(score_str, coord_2d(field.size.x + 2, 3));
 
 	SDL_RenderPresent(renderer);
 }
