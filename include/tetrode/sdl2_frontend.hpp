@@ -2,6 +2,7 @@
 #include <tetrode/frontend.hpp>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_mixer.h>
 
 #include <string>
 
@@ -23,6 +24,13 @@ class sdl2_frontend : public frontend {
 		SDL_Window   *window;
 		SDL_Renderer *renderer;
 		TTF_Font     *font;
+
+		struct {
+			Mix_Chunk *rotation;
+			Mix_Chunk *locked;
+			Mix_Chunk *wallhit;
+			Mix_Chunk *tspin;
+		} sfx;
 };
 
 // namespace tetrode

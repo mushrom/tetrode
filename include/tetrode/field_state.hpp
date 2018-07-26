@@ -26,6 +26,14 @@ enum movement {
 	Left, Right,
 };
 
+enum changes {
+	Updated = 1 << 0,
+	Tspin   = 1 << 1,
+	Locked  = 1 << 2,
+	WallHit = 1 << 3,
+	Rotated = 1 << 4,
+};
+
 class block {
 	public:
 		enum states {
@@ -113,7 +121,7 @@ class field_state {
 		unsigned lines_cleared;
 
 		// flag to help renderer know when to redraw
-		bool updated;
+		unsigned updates;
 
 	private:
 		void generate_next_pieces(void);

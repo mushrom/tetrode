@@ -4,6 +4,7 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_mixer.h>
 
 #include <map>
 #include <tuple>
@@ -31,7 +32,7 @@ std::map<block::states, std::tuple<unsigned, unsigned, unsigned>> block_colors =
 };
 
 sdl2_frontend::sdl2_frontend() {
-	if (SDL_Init(SDL_INIT_VIDEO) < 0){
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0){
 		throw "SDL_Init()";
 	}
 
@@ -61,6 +62,26 @@ sdl2_frontend::sdl2_frontend() {
 	if (!font) {
 		throw "TTF_OpenFont()";
 	}
+
+	int mix_flags = MIX_INIT_OGG;
+	if (Mix_Init(mix_flags) != mix_flags) {
+		throw "Mix_Init()";
+	}
+
+	if (Mix_OpenAudio(48000, MIX_DEFAULT_FORMAT, 2, 1024) == -1) {
+		throw "Mix_OpenAudio()";
+	}
+
+	sfx.locked   = Mix_LoadWAV("assets/sfx/locked.ogg");
+	sfx.rotation = Mix_LoadWAV("assets/sfx/rotation.ogg");
+	sfx.tspin    = Mix_LoadWAV("assets/sfx/tspin.ogg");
+	sfx.wallhit  = Mix_LoadWAV("assets/sfx/wallhit.ogg");
+
+	if (!sfx.locked || !sfx.rotation || !sfx.tspin || !sfx.wallhit) {
+		throw "Mix_LoadWAV()";
+	}
+
+	Mix_AllocateChannels(32);
 }
 
 sdl2_frontend::~sdl2_frontend(){
@@ -212,11 +233,27 @@ int sdl2_frontend::run(void){
 		field.handle_event(event::Tick);
 		field.handle_event(ev);
 
-		if (field.updated) {
-			redraw();
-			field.updated = false;
+		if (field.updates & changes::Locked) {
+			Mix_PlayChannel(-1, sfx.locked, 0);
 		}
 
+		else if (field.updates & changes::Tspin) {
+			Mix_PlayChannel(-1, sfx.tspin, 0);
+		}
+
+		else if (field.updates & changes::Rotated) {
+			Mix_PlayChannel(-1, sfx.rotation, 0);
+		}
+
+		else if (field.updates & changes::WallHit) {
+			Mix_PlayChannel(-1, sfx.wallhit, 0);
+		}
+
+		if (field.updates & changes::Updated) {
+			redraw();
+		}
+
+		field.updates = 0;
 		SDL_Delay(10);
 		ticks++;
 	}
