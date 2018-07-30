@@ -85,7 +85,20 @@ sdl2_frontend::sdl2_frontend() {
 }
 
 sdl2_frontend::~sdl2_frontend(){
+	// Close fonts
+	TTF_CloseFont(font);
+	font = NULL;
+	TTF_Quit();
 
+	// Close audio
+	for (auto& x : {sfx.locked, sfx.rotation, sfx.tspin, sfx.wallhit}) {
+		Mix_FreeChunk(x);
+	}
+
+	Mix_CloseAudio();
+	Mix_Quit();
+
+	SDL_Quit();
 }
 
 event sdl2_frontend::get_event(void){
