@@ -20,6 +20,7 @@ class sdl2_frontend : public frontend {
 		event get_event(void);
 		void draw_tetrimino(tetrimino& tet, coord_2d coord);
 		void draw_text(std::string& text, coord_2d coord);
+		void play_sfx(void);
 
 		SDL_Window   *window;
 		SDL_Renderer *renderer;

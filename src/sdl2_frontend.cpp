@@ -223,7 +223,23 @@ void sdl2_frontend::redraw(void){
 	SDL_RenderPresent(renderer);
 }
 
-#include <unistd.h>
+void sdl2_frontend::play_sfx(void){
+	if (field.updates & changes::Locked) {
+		Mix_PlayChannel(-1, sfx.locked, 0);
+	}
+
+	else if (field.updates & changes::Tspin) {
+		Mix_PlayChannel(-1, sfx.tspin, 0);
+	}
+
+	else if (field.updates & changes::Rotated) {
+		Mix_PlayChannel(-1, sfx.rotation, 0);
+	}
+
+	else if (field.updates & changes::WallHit) {
+		Mix_PlayChannel(-1, sfx.wallhit, 0);
+	}
+}
 
 int sdl2_frontend::run(void){
 	event ev;
@@ -233,21 +249,7 @@ int sdl2_frontend::run(void){
 		field.handle_event(event::Tick);
 		field.handle_event(ev);
 
-		if (field.updates & changes::Locked) {
-			Mix_PlayChannel(-1, sfx.locked, 0);
-		}
-
-		else if (field.updates & changes::Tspin) {
-			Mix_PlayChannel(-1, sfx.tspin, 0);
-		}
-
-		else if (field.updates & changes::Rotated) {
-			Mix_PlayChannel(-1, sfx.rotation, 0);
-		}
-
-		else if (field.updates & changes::WallHit) {
-			Mix_PlayChannel(-1, sfx.wallhit, 0);
-		}
+		play_sfx();
 
 		if (field.updates & changes::Updated) {
 			redraw();
