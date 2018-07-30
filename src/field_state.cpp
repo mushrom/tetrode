@@ -101,8 +101,8 @@ bool field_state::active_collides_sides(enum movement dir){
 	for (auto& block : active.first.blocks) {
 		auto& coord = active.second;
 
-		unsigned y = block.second.y + coord.y;
-		unsigned x = block.second.x + coord.x;
+		int y = block.second.y + coord.y;
+		int x = block.second.x + coord.x;
 
 		if (dir == movement::Left){
 			if (x == 0) {
@@ -285,6 +285,8 @@ void field_state::handle_event(enum event ev){
 			rotation_normalize();
 			updates |= changes::Rotated | changes::Updated;
 			break;
+
+		default: break;
 	}
 }
 
@@ -310,7 +312,7 @@ void field_state::generate_next_pieces(void){
 int field_state::clear_lines(void){
 	int cleared = 0;
 
-	for (unsigned y = 0; y < size.y;) {
+	for (int y = 0; y < size.y;) {
 		bool full = true;
 
 		for (auto& block : field[y]) {
@@ -325,7 +327,7 @@ int field_state::clear_lines(void){
 		if (full) {
 			cleared++;
 
-			for (unsigned j = y; j < size.y - 1; j++) {
+			for (int j = y; j < size.y - 1; j++) {
 				field[j] = field[j + 1];
 			}
 
@@ -343,7 +345,7 @@ int field_state::clear_lines(void){
 int field_state::color_cleared_lines(void){
 	int cleared = 0;
 
-	for (unsigned y = 0; y < size.y; y++) {
+	for (int y = 0; y < size.y; y++) {
 		bool full = true;
 
 		for (auto& block : field[y]) {
