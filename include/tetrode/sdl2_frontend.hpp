@@ -17,7 +17,13 @@ class sdl2_frontend : public frontend {
 
 	private:
 		void redraw(void);
+
+		void clear(void);
+		void present(void);
+
 		event get_event(void);
+		void draw_menus(void);
+		void draw_field(field_state& field);
 		void draw_tetrimino(tetrimino& tet, coord_2d coord);
 		void draw_text(std::string& text, coord_2d coord);
 		void play_sfx(void);

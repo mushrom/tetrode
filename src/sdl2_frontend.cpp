@@ -32,6 +32,8 @@ std::map<block::states, std::tuple<unsigned, unsigned, unsigned>> block_colors =
 };
 
 sdl2_frontend::sdl2_frontend() {
+	menus.push_front(main_menu());
+
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0){
 		throw "SDL_Init()";
 	}
@@ -145,8 +147,6 @@ void sdl2_frontend::draw_tetrimino(tetrimino& tet, coord_2d coord){
 	for (const auto &block : tet.blocks) {
 		auto color = block_colors[block.first.state];
 
-		//int x = (block.second.x + field.active.second.x);
-		//int y = (block.second.y + field.active.second.y);
 		int x = (block.second.x + coord.x);
 		int y = (block.second.y + coord.y);
 
@@ -172,8 +172,8 @@ void sdl2_frontend::draw_text(std::string& str, coord_2d coord) {
 		SDL_Texture *text = SDL_CreateTextureFromSurface(renderer, text_surface);
 		SDL_Rect rect;
 
-		rect.x = 48 + coord.x * BLOCK_FULL_SIZE;
-		rect.y = 48 + coord.y * BLOCK_FULL_SIZE;
+		rect.x = BLOCK_FULL_SIZE + coord.x * BLOCK_FULL_SIZE;
+		rect.y = BLOCK_FULL_SIZE + coord.y * BLOCK_FULL_SIZE;
 		rect.w = text_surface->w;
 		rect.h = text_surface->h;;
 
@@ -185,20 +185,16 @@ void sdl2_frontend::draw_text(std::string& str, coord_2d coord) {
 	}
 }
 
-void sdl2_frontend::redraw(void){
-	SDL_RenderClear(renderer);
-	SDL_SetRenderDrawColor(renderer, 0x8, 0x8, 0x8, 0);
-	SDL_RenderFillRect(renderer, NULL);
-
+void sdl2_frontend::draw_field(field_state& n_field){
 	SDL_Rect rect;
 	rect.w = rect.h = BLOCK_FILL_SIZE;
 
-	for (int y = field.size.y / 2; y >= 0; y--) {
-		for (int x = 0; x < field.size.x; x++) {
-			auto color = block_colors[field.field[y][x].state];
+	for (int y = n_field.size.y / 2; y >= 0; y--) {
+		for (int x = 0; x < n_field.size.x; x++) {
+			auto color = block_colors[n_field.field[y][x].state];
 
 			rect.x = 48 + x       * BLOCK_FULL_SIZE;
-			rect.y = 48 + ((field.size.y / 2) - y) * BLOCK_FULL_SIZE;
+			rect.y = 48 + ((n_field.size.y / 2) - y) * BLOCK_FULL_SIZE;
 
 			SDL_SetRenderDrawColor(renderer,
 			                       std::get<0>(color),
@@ -208,32 +204,81 @@ void sdl2_frontend::redraw(void){
 		}
 	}
 
-	coord_2d ghost_coord = field.lower_collide_coord(field.active.first, field.active.second);
-	tetrimino ghost_block = field.active.first;
+	coord_2d ghost_coord = n_field.lower_collide_coord(n_field.active.first, n_field.active.second);
+	tetrimino ghost_block = n_field.active.first;
 
 	for (auto& block : ghost_block.blocks){
 		block.first.state = block::states::Ghost;
 	}
 
 	draw_tetrimino( ghost_block, ghost_coord );
-	draw_tetrimino( field.active.first, field.active.second );
-	draw_tetrimino( field.next_pieces.front(),
-	                coord_2d(field.size.x + 2, 2 ));
+	draw_tetrimino( n_field.active.first, n_field.active.second );
+	draw_tetrimino( n_field.next_pieces.front(),
+	                coord_2d(n_field.size.x + 2, 2 ));
 
-	if (field.have_held) {
-		draw_tetrimino( field.hold,
-		                coord_2d(field.size.x + 2, 8 ));
+	if (n_field.have_held) {
+		draw_tetrimino( n_field.hold,
+		                coord_2d(n_field.size.x + 2, 8 ));
 	}
 
-	std::string score_str = "score: " + std::to_string(field.score);
-	std::string level_str = "level: " + std::to_string(field.level);
-	std::string lines_str = "cleared: " + std::to_string(field.lines_cleared);
+	std::string score_str = "score: " + std::to_string(n_field.score);
+	std::string level_str = "level: " + std::to_string(n_field.level);
+	std::string lines_str = "cleared: " + std::to_string(n_field.lines_cleared);
 
-	draw_text(level_str, coord_2d(field.size.x + 2, 2));
-	draw_text(score_str, coord_2d(field.size.x + 2, 3));
-	draw_text(lines_str, coord_2d(field.size.x + 2, 4));
+	draw_text(level_str, coord_2d(n_field.size.x + 2, 2));
+	draw_text(score_str, coord_2d(n_field.size.x + 2, 3));
+	draw_text(lines_str, coord_2d(n_field.size.x + 2, 4));
+}
 
+void sdl2_frontend::draw_menus(void){
+	SDL_DisplayMode dm;
+	SDL_GetCurrentDisplayMode(0, &dm);
+
+	for (auto& x : menus) {
+		SDL_Rect rect;
+		rect.h = dm.h;
+		rect.w = 150;
+
+		rect.x = 0;
+		rect.y = 0;
+
+		SDL_SetRenderDrawColor(renderer, 0x20, 0x20, 0x20, 0);
+		SDL_RenderFillRect(renderer, &rect);
+
+		unsigned i = 0;
+		for (auto& entry : x.entries) {
+			if (*x.selected == entry) {
+				std::string asdf = ">" + entry->text;
+				draw_text(asdf, coord_2d(0, i));
+
+			} else {
+				draw_text(entry->text, coord_2d(0, i));
+			}
+
+			i += 1;
+		}
+	}
+}
+
+void sdl2_frontend::clear(void){
+	SDL_RenderClear(renderer);
+	SDL_SetRenderDrawColor(renderer, 0x8, 0x8, 0x8, 0);
+	SDL_RenderFillRect(renderer, NULL);
+}
+
+void sdl2_frontend::present(void){
 	SDL_RenderPresent(renderer);
+}
+
+void sdl2_frontend::redraw(void){
+	clear();
+	draw_field(field);
+
+	if (!menus.empty()){
+		draw_menus();
+	}
+
+	present();
 }
 
 void sdl2_frontend::play_sfx(void){
@@ -256,21 +301,31 @@ void sdl2_frontend::play_sfx(void){
 
 int sdl2_frontend::run(void){
 	event ev;
-	unsigned ticks = 0;
+	redraw();
 
 	while ((ev = get_event()) != event::Quit) {
-		field.handle_event(event::Tick);
-		field.handle_event(ev);
+		if (ev == event::Pause) {
+			paused = !paused;
+		}
 
-		play_sfx();
-
-		if (field.updates & changes::Updated) {
+		if (!menus.empty() && ev != event::NullEvent) {
+			menus.back().handle_event(this, ev);
 			redraw();
+		}
+
+		else if (!paused) {
+			field.handle_event(event::Tick);
+			field.handle_event(ev);
+
+			play_sfx();
+
+			if (field.updates & changes::Updated) {
+				redraw();
+			}
 		}
 
 		field.updates = 0;
 		SDL_Delay(10);
-		ticks++;
 	}
 
 	return 0;
