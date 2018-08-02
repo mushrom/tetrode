@@ -43,14 +43,29 @@ class main_menu : public menu {
 					puts("Got here");
 
 					front->menus.pop_back();
-					front->paused = false;
+
+					if (front->menus.empty()) {
+						front->paused = false;
+					}
+				}
+		};
+
+		class settings_entry : public menu::entry {
+			public:
+				settings_entry(std::string s){ text = s; };
+				virtual void action(frontend *front){
+					puts("Settings");
+
+					front->menus.push_back(main_menu());
 				}
 		};
 
 		main_menu() {
-			for (auto& x : {"Marathon", "Practice", "Multiplayer", "Settings"}) {
+			for (auto& x : {"Marathon", "Practice", "Multiplayer"}) {
 				entries.push_back(new main_entry(x));
 			}
+
+			entries.push_back(new settings_entry("Settings"));
 
 			selected = entries.begin();
 		}

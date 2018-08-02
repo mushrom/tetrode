@@ -231,6 +231,8 @@ void sdl2_frontend::draw_field(field_state& n_field){
 }
 
 void sdl2_frontend::draw_menus(void){
+	unsigned k = 0;
+
 	SDL_DisplayMode dm;
 	SDL_GetCurrentDisplayMode(0, &dm);
 
@@ -239,24 +241,28 @@ void sdl2_frontend::draw_menus(void){
 		rect.h = dm.h;
 		rect.w = 150;
 
-		rect.x = 0;
+		rect.x = k * (rect.w - 100);
 		rect.y = 0;
 
-		SDL_SetRenderDrawColor(renderer, 0x20, 0x20, 0x20, 0);
+		unsigned color = 0x30 - 8*k;
+
+		SDL_SetRenderDrawColor(renderer, color, color, color, 0);
 		SDL_RenderFillRect(renderer, &rect);
 
 		unsigned i = 0;
 		for (auto& entry : x.entries) {
 			if (*x.selected == entry) {
 				std::string asdf = ">" + entry->text;
-				draw_text(asdf, coord_2d(0, i));
+				draw_text(asdf, coord_2d(k * 2, i));
 
 			} else {
-				draw_text(entry->text, coord_2d(0, i));
+				draw_text(entry->text, coord_2d(k * 2, i));
 			}
 
 			i += 1;
 		}
+
+		k += 1;
 	}
 }
 
