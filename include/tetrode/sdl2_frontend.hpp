@@ -28,6 +28,9 @@ class sdl2_frontend : public frontend {
 		void draw_text(std::string& text, coord_2d coord);
 		void play_sfx(void);
 
+		unsigned get_block_full_size(void);
+		unsigned get_block_filled_size(void);
+
 		SDL_Window   *window;
 		SDL_Renderer *renderer;
 		TTF_Font     *font;

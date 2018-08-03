@@ -12,8 +12,10 @@
 
 namespace tetrode {
 
+	/*
 #define BLOCK_FILL_SIZE 21
 #define BLOCK_FULL_SIZE 24
+*/
 
 std::map<block::states, std::tuple<unsigned, unsigned, unsigned>> block_colors = {
 	{ block::states::Empty,    {0x11, 0x11, 0x11} },
@@ -59,7 +61,8 @@ sdl2_frontend::sdl2_frontend() {
 		throw "SDL_CreateRenderer()";
 	}
 
-	font = TTF_OpenFont("assets/fonts/LiberationSans-Regular.ttf", BLOCK_FILL_SIZE);
+	font = TTF_OpenFont("assets/fonts/LiberationSans-Regular.ttf",
+	                    get_block_filled_size());
 
 	if (!font) {
 		throw "TTF_OpenFont()";
@@ -141,8 +144,11 @@ event sdl2_frontend::get_event(void){
 }
 
 void sdl2_frontend::draw_tetrimino(tetrimino& tet, coord_2d coord){
+	unsigned filled_size = get_block_filled_size();
+	unsigned full_size = get_block_full_size();
+
 	SDL_Rect rect;
-	rect.w = rect.h = BLOCK_FILL_SIZE;
+	rect.w = rect.h = filled_size;
 
 	for (const auto &block : tet.blocks) {
 		auto color = block_colors[block.first.state];
@@ -150,8 +156,8 @@ void sdl2_frontend::draw_tetrimino(tetrimino& tet, coord_2d coord){
 		int x = (block.second.x + coord.x);
 		int y = (block.second.y + coord.y);
 
-		rect.x = 48 + x       * BLOCK_FULL_SIZE;
-		rect.y = 48 + ((field.size.y / 2) - y) * BLOCK_FULL_SIZE;
+		rect.x = x       * full_size;
+		rect.y = ((field.size.y / 2) - y) * full_size;
 
 		SDL_SetRenderDrawColor(renderer,
 				std::get<0>(color),
@@ -165,6 +171,8 @@ void sdl2_frontend::draw_text(std::string& str, coord_2d coord) {
 	SDL_Color color = {0xff, 0xff, 0xff};
 	SDL_Surface *text_surface;
 
+	unsigned full_size = get_block_full_size();
+
 	if (!(text_surface = TTF_RenderText_Blended(font, str.c_str(), color))){
 		throw "TTF_RenderText_Blended()";
 
@@ -172,8 +180,8 @@ void sdl2_frontend::draw_text(std::string& str, coord_2d coord) {
 		SDL_Texture *text = SDL_CreateTextureFromSurface(renderer, text_surface);
 		SDL_Rect rect;
 
-		rect.x = BLOCK_FULL_SIZE + coord.x * BLOCK_FULL_SIZE;
-		rect.y = BLOCK_FULL_SIZE + coord.y * BLOCK_FULL_SIZE;
+		rect.x = coord.x * full_size;
+		rect.y = coord.y * full_size;
 		rect.w = text_surface->w;
 		rect.h = text_surface->h;;
 
@@ -185,16 +193,39 @@ void sdl2_frontend::draw_text(std::string& str, coord_2d coord) {
 	}
 }
 
+unsigned sdl2_frontend::get_block_full_size(void){
+	int w, h;
+	SDL_GetWindowSize(window, &w, &h);
+
+	if (w <= field.size.x || h <= (field.size.y / 2)) {
+		return 0;
+	}
+
+	unsigned x = w / (field.size.x + 5);
+	unsigned y = h / ((field.size.y / 2) + 1);
+
+	return (x < y)? x : y;
+}
+
+unsigned sdl2_frontend::get_block_filled_size(void){
+	unsigned n = get_block_full_size();
+
+	return (n > 10)? n - 3 : n;
+}
+
 void sdl2_frontend::draw_field(field_state& n_field){
+	unsigned filled_size = get_block_filled_size();
+	unsigned full_size = get_block_full_size();
+
 	SDL_Rect rect;
-	rect.w = rect.h = BLOCK_FILL_SIZE;
+	rect.w = rect.h = filled_size;
 
 	for (int y = n_field.size.y / 2; y >= 0; y--) {
 		for (int x = 0; x < n_field.size.x; x++) {
 			auto color = block_colors[n_field.field[y][x].state];
 
-			rect.x = 48 + x       * BLOCK_FULL_SIZE;
-			rect.y = 48 + ((n_field.size.y / 2) - y) * BLOCK_FULL_SIZE;
+			rect.x = x       * full_size;
+			rect.y = ((n_field.size.y / 2) - y) * full_size;
 
 			SDL_SetRenderDrawColor(renderer,
 			                       std::get<0>(color),
@@ -232,13 +263,13 @@ void sdl2_frontend::draw_field(field_state& n_field){
 
 void sdl2_frontend::draw_menus(void){
 	unsigned k = 0;
+	int w, h;
 
-	SDL_DisplayMode dm;
-	SDL_GetCurrentDisplayMode(0, &dm);
+	SDL_GetWindowSize(window, &w, &h);
 
 	for (auto& x : menus) {
 		SDL_Rect rect;
-		rect.h = dm.h;
+		rect.h = h;
 		rect.w = 150;
 
 		rect.x = k * (rect.w - 100);
@@ -311,6 +342,9 @@ int sdl2_frontend::run(void){
 
 	while ((ev = get_event()) != event::Quit) {
 		if (ev == event::Pause) {
+			// TODO: pop up game menu when playing, and don't actually pause in
+			//       multiplayer games
+			menus.push_back(main_menu());
 			paused = !paused;
 		}
 
